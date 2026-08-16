@@ -73,18 +73,21 @@
 **เป้าหมาย:** อัลกอริทึมค้นหา/จัดอันดับที่ทนต่อข้อความจาก STT ที่ไม่ตรงเป๊ะ — ส่วนนี้คือหัวใจของระบบ ทำและทดสอบแยกจาก STT/UI ได้ก่อน
 
 **งาน:**
-- [ ] เขียน `lib/search/normalize.ts`:
-  - ฟังก์ชัน normalize ข้อความไทย (ลบช่องว่าง/เครื่องหมายวรรคตอนเกิน, normalize สระซ้อน)
-  - ฟังก์ชันสร้าง "โครงพยัญชนะ" (ตัดวรรณยุกต์ + สระ) ให้ใช้ตรรกะเดียวกับตอน ingest
-- [ ] เขียน `lib/search/matcher.ts`:
-  - Query Postgres ด้วย `pg_trgm` similarity บนทั้ง `full_lyrics` และ `lyrics_skeleton`
-  - รวมคะแนน (weighted score) เช่น `0.6 * trigram_similarity(full) + 0.4 * trigram_similarity(skeleton)`
-  - คืน top-N (เช่น 5) พร้อม snippet ที่ match มากที่สุด (ใช้ `substring`/manual windowing รอบจุดที่คะแนนสูง)
-- [ ] เขียนชุดทดสอบ (unit test) ด้วย "ข้อความจำลองแบบ STT เพี้ยน" (พิมพ์เองเลียนแบบ error ที่ STT มักทำ: สลับพยัญชนะใกล้เคียง, เว้นวรรคผิดที่, ตัดคำขาด) เทียบกับเนื้อเพลงจริงในเชิงว่า top-5 ต้องมีเพลงที่ถูกต้องอยู่
+- [x] `src/lib/search/normalize.ts` — `cleanText()`, `buildFullLyrics()`, `toSkeleton()` (ทำใน Phase 1 แล้ว เพราะ ingest ต้องใช้ตั้งแต่ต้น — ใช้ตรรกะเดียวกันทั้ง ingest และ query)
+- [x] เขียน [src/lib/search/matcher.ts](../src/lib/search/matcher.ts):
+  - Query ด้วย **`word_similarity()`** (ไม่ใช่ `similarity()` เปล่าๆ ตามที่พบปัญหาใน Phase 1) บนทั้ง `full_lyrics` และ `lyrics_skeleton`
+  - รวมคะแนน weighted: `0.6 * word_similarity(full) + 0.4 * word_similarity(skeleton)`
+  - คืน top-N พร้อม snippet — หา snippet ด้วย sliding-window trigram (Dice coefficient) ใน JS เฉพาะแถวที่ query กลับมาแล้ว (ไม่สแกนทั้ง 1,500 แถว)
+  - `MIN_SCORE_THRESHOLD` (export ไว้ให้ Phase 4 ใช้ตัดสิน "ไม่พบ") = 0.3 — ปรับจาก draft แรก (0.15) หลังพบว่า query ที่ไม่เกี่ยวข้องเลยได้คะแนน 0.17-0.22 ซึ่งสูงกว่า draft threshold
+- [x] เขียนชุดทดสอบ [scripts/eval-matcher.ts](../scripts/eval-matcher.ts) — จำลอง query เพี้ยนแบบ STT จริง (ตัดวรรณยุกต์, สลับพยัญชนะเสียงใกล้เคียงด้วย confusion map, ลบตัวอักษรสุ่ม, เว้น/รวมช่องว่างผิด) 60 trials จากข้อมูลจริง
 
 **Deliverable:** ฟังก์ชัน `searchLyrics(queryText: string): SearchResult[]` ที่เรียกตรงจาก script ทดสอบได้ ไม่ต้องผ่าน UI/STT เลย
 
-**Acceptance criteria:** จากชุดทดสอบ ~20-30 query จำลอง เพลงที่ถูกต้องต้องอยู่ใน top-5 อย่างน้อย 80% ของเคส (ตัวเลขตั้งต้น ปรับได้ตอน Phase 6)
+**Acceptance criteria:** ✅ accuracy@5 ต้อง ≥80% — ได้จริง **100%** (accuracy@1 ~95-97%) จาก 60 trials, สอดคล้องกันในการรันซ้ำ 2 รอบ
+
+> **สถานะ: ✅ เสร็จสมบูรณ์** (2026-08-17)
+>
+> 🔍 **ข้อค้นพบสำคัญที่กระทบ Phase 4/6:** ทดสอบ query ที่ไม่เกี่ยวกับเพลงเลย (เช่น "วันนี้อากาศดีมาก...") พบว่ายังได้คะแนน 0.17-0.22 (ไม่ใช่ศูนย์) เพราะ trigram บางตัวบังเอิญตรงกัน — ต้องมี `MIN_SCORE_THRESHOLD` กันไว้เสมอ ห้ามโชว์ผลลัพธ์ดิบโดยไม่กรอง ไม่งั้น Phase 4 API จะคืนเพลง "มั่วๆ" เป็นคำตอบเวลาผู้ใช้พูดเรื่องที่ไม่ใช่เนื้อเพลงเลย (เช่น พูดผิด/พูดเรื่องอื่นใส่ไมค์)
 
 ---
 
