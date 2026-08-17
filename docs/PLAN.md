@@ -119,16 +119,23 @@
 **เป้าหมาย:** เปิด endpoint ให้ frontend ส่งข้อความ (จาก Web Speech API หรือพิมพ์เอง) เข้ามาค้นหาเพลง
 
 **งาน:**
-- [ ] `app/api/search/route.ts`:
+- [x] [src/app/api/search/route.ts](../src/app/api/search/route.ts):
   - รับ JSON `{ query: string }` (มาจาก `listenOnce()` หรือช่องพิมพ์เอง — ฝั่ง backend ไม่สนว่าที่มาคือเสียงหรือพิมพ์) → เรียก `searchLyrics()` → คืน JSON `{ results: [...] }`
-  - ใช้ `MIN_SCORE_THRESHOLD` จาก `matcher.ts` (Phase 2) ตัดสิน "ไม่พบเพลงที่ตรงกัน" แทนการโชว์ผลคะแนนต่ำแบบมั่วๆ
-  - Validate input ด้วย `zod` (จำกัดความยาว query กันส่ง payload ใหญ่ผิดปกติ)
-- [ ] Error handling: query ว่าง, DB error, ไม่มีผลลัพธ์ที่คะแนนพอ
-- [ ] Basic rate limiting ต่อ IP (กัน abuse แม้ query ฟรีแล้ว ก็ยังกิน DB query โหลดได้)
+  - ใช้ `MIN_SCORE_THRESHOLD` จาก `matcher.ts` (Phase 2) กรองผลคะแนนต่ำออกก่อนส่งกลับ แทนการโชว์ผลมั่วๆ
+  - Validate input ด้วย `zod` (1-500 ตัวอักษร)
+- [x] [src/lib/rateLimit.ts](../src/lib/rateLimit.ts) — in-memory rate limit ต่อ IP (20 req/60s), คืน `429` + `Retry-After` header เมื่อเกิน
+- [x] อ่าน `node_modules/next/dist/docs/01-app/01-getting-started/15-route-handlers.md` ก่อนเขียน (ตามข้อบังคับ `AGENTS.md`) — ยืนยันว่า `runtime` default เป็น `'nodejs'` อยู่แล้วในเวอร์ชันนี้ (ไม่ต้อง export เพิ่ม, `pg` ใช้ได้ปกติ)
+- [x] ทดสอบจริงด้วย `next dev` + `curl`: happy path, query ว่าง (400), field หาย (400), JSON ผิด (400), query ไม่เกี่ยวข้องเลย (กรองเหลือ `results: []` ถูกต้อง), rate limit (429 หลัง 20 req/60s)
 
 **Deliverable:** ยิง `curl`/Postman ไปที่ `/api/search` พร้อม `{ "query": "..." }` ได้ผลลัพธ์ JSON ที่ถูกต้อง
 
-**Acceptance criteria:** ครบ happy path + error path (query ว่าง, ไม่พบผลลัพธ์, DB error) มีการจัดการทั้งหมดโดยไม่ 500 crash
+**Acceptance criteria:** ✅ ครบ happy path + error path (query ว่าง, ไม่พบผลลัพธ์, DB error, rate limit) ไม่มี 500 crash ในเคสที่ควรจัดการได้
+
+> **สถานะ: ✅ เสร็จสมบูรณ์** (2026-08-17)
+>
+> 🔍 **ปัญหาที่เจอระหว่างทดสอบ (ไม่ใช่บั๊กใน API):**
+> 1. **Dev server เก่าค้าง process** — รัน `next dev` ครั้งแรกแล้วเจอ `password authentication failed` ทั้งที่ `.env.local` ถูกต้อง (เช็คด้วย `npm run db:check` ผ่านตลอด) สาเหตุคือมี `next dev` instance เก่า (PID ค้างจาก background task ก่อนหน้าที่ระบบแจ้งผิดว่า "หยุดแล้ว") ยังกิน port 3000 อยู่จริง พร้อม env แบบ stale ต้อง `taskkill /PID ... /F` แล้วรันใหม่ถึงหาย — เป็น pattern เดียวกับปัญหา stray env var ใน Phase 0 (process เก่าแบก env เก่าติดตัว)
+> 2. **curl บน Git Bash/Windows ส่งภาษาไทยผ่าน `-d '...'` inline แล้ว encode เพี้ยน** ทำให้ query กลายเป็นไบต์ขยะ ค้นไม่เจออะไรเลย (`results: []` ทั้งที่ควรเจอ) แก้โดยเขียน payload เป็นไฟล์ JSON (UTF-8 ชัดเจน) แล้วใช้ `curl --data-binary @file` แทน — ควรใช้วิธีนี้เวลาทดสอบ API ด้วยข้อความไทยผ่าน curl ต่อไป
 
 ---
 
