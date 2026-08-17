@@ -1,68 +1,106 @@
-import Image from "next/image";
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { RecordButton } from "@/components/RecordButton";
+import { ResultCard } from "@/components/ResultCard";
+import { searchByText } from "@/lib/search/searchClient";
+import type { SearchResult } from "@/lib/search/types";
 import styles from "./page.module.css";
 
+type Phase = "idle" | "searching" | "done" | "error";
+
 export default function Home() {
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function runSearch(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    setQuery(trimmed);
+    setPhase("searching");
+    setErrorMessage("");
+
+    try {
+      const found = await searchByText(trimmed);
+      setResults(found);
+      setPhase("done");
+    } catch (err) {
+      setResults([]);
+      setErrorMessage(err instanceof Error ? err.message : "เกิดข้อผิดพลาด ลองอีกครั้ง");
+      setPhase("error");
+    }
+  }
+
+  function handleVoiceResult(transcript: string) {
+    setInputValue(transcript);
+    void runSearch(transcript);
+  }
+
+  function handleVoiceError(message: string) {
+    setErrorMessage(message);
+    setPhase("error");
+  }
+
+  function handleTextSubmit(e: FormEvent) {
+    e.preventDefault();
+    void runSearch(inputValue);
+  }
+
+  const isSearching = phase === "searching";
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        <header className={styles.header}>
+          <h1 className={styles.appTitle}>🎵 SongLens</h1>
+          <p className={styles.tagline}>จำเนื้อเพลงได้บางท่อน? พูดหรือพิมพ์ แล้วให้เราช่วยหาเพลงลูกทุ่งที่ใช่</p>
+        </header>
+
+        <RecordButton onResult={handleVoiceResult} onError={handleVoiceError} disabled={isSearching} />
+
+        <div className={styles.divider}>หรือ</div>
+
+        <form className={styles.textForm} onSubmit={handleTextSubmit}>
+          <input
+            className={styles.textInput}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="พิมพ์เนื้อเพลงท่อนที่จำได้..."
+            disabled={isSearching}
+          />
+          <button className={styles.searchButton} type="submit" disabled={isSearching || !inputValue.trim()}>
+            ค้นหา
+          </button>
+        </form>
+
+        <section className={styles.results} aria-live="polite">
+          {isSearching && <p className={styles.status}>กำลังค้นหา...</p>}
+
+          {!isSearching && query && (
+            <p className={styles.queryEcho}>
+              ค้นจาก: <span>&ldquo;{query}&rdquo;</span>
+            </p>
+          )}
+
+          {phase === "error" && errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
+
+          {phase === "done" && results.length === 0 && (
+            <p className={styles.status}>ไม่พบเพลงที่ตรงกัน ลองพูด/พิมพ์ท่อนอื่น หรือพูดให้ชัดขึ้น</p>
+          )}
+
+          {phase === "done" && results.length > 0 && (
+            <ul className={styles.resultList}>
+              {results.map((r) => (
+                <ResultCard key={r.id} result={r} />
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
     </div>
   );

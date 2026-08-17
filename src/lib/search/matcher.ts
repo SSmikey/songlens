@@ -1,15 +1,8 @@
 import { getPool } from "./db";
 import { cleanText, toSkeleton } from "./normalize";
+import type { SearchResult } from "./types";
 
-export interface SearchResult {
-  id: number;
-  title: string;
-  artist: string;
-  year: number | null;
-  emotion: string | null;
-  score: number;
-  snippet: string;
-}
+export type { SearchResult } from "./types";
 
 // Weighted blend of two word_similarity signals:
 //  - full_lyrics: as-written text, catches queries STT got mostly right
