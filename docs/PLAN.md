@@ -17,6 +17,7 @@
 | 4 | API Layer | ต่อ STT + Matching เป็น endpoint เดียว |
 | 5 | Frontend UI | หน้าอัดเสียง + แสดงผลลัพธ์ |
 | 6 | Integration Testing & Tuning | ทดสอบ end-to-end ด้วยเสียงจริง ปรับ threshold |
+| 6.5 | UX/UI Design Polish | ออกแบบสี/ปุ่ม/interaction ให้สวยงามน่าใช้ ก่อน deploy |
 | 7 | Deployment | ขึ้น production บน Vercel + managed Postgres |
 | 8 | Polish & Hardening | UX เก็บงาน, error handling, rate limit, ลิขสิทธิ์ |
 
@@ -186,6 +187,48 @@
 **Acceptance criteria:** ✅ accuracy@5 ผ่านเกณฑ์ (เกิน 70% ที่ตั้งไว้มาก — ได้ 100% แต่บน sample size เล็ก 7 เคส ควรตีความอย่างระมัดระวัง ไม่ใช่การันตี 100% ในการใช้งานจริงระยะยาว)
 
 > **สถานะ: ✅ ปิดตามที่ผู้ใช้ยืนยัน** (2026-08-17) — ผลดีมาก ไม่ต้องปรับพารามิเตอร์เพิ่ม รายการที่ทิ้งไว้เป็น backlog (เทียบร้อง vs พูด, query logging) ไม่ block การไป Phase ถัดไป แต่ควรกลับมาดูถ้าเจอปัญหาหลัง deploy จริง
+
+---
+
+## Phase 6.5 — UX/UI Design Polish
+
+**เป้าหมาย:** ทำให้หน้าเว็บ "สวยงาม น่าใช้" ก่อน deploy จริง — ใช้ palette สีที่กำหนด เน้นปุ่มที่ผู้ใช้ interact ด้วยบ่อย (ปุ่มไมค์, ปุ่มค้นหา, การ์ดผลลัพธ์)
+
+**Palette ที่ใช้:**
+| สี | Hex | บทบาท |
+|---|---|---|
+| Maroon | `#8B2626` | accent เข้ม, hover/active state ของปุ่มหลัก |
+| Orange | `#EF6905` | สีหลัก (ปุ่มไมค์, ปุ่มค้นหา, focus ring) |
+| Cream | `#F1E5A1` | พื้นหลังโทนอุ่น, การ์ด/พื้นผิว |
+| Green | `#486C2F` | accent รอง (confidence bar, success state) |
+
+**งาน:**
+- [x] กำหนด design token ใน [globals.css](../src/app/globals.css) (light + dark mode) — `--color-maroon/orange/cream/green` เป็น raw brand token + semantic token ชั้นบน (`--background`, `--foreground`, `--surface`, `--accent`, `--accent-hover`, `--accent-active`, `--accent-secondary`, `--focus-ring`, `--error`)
+- [x] ปรับปุ่มไมค์ ([RecordButton.module.css](../src/components/RecordButton.module.css)) — hover ยกตัว+เงา, active กดยุบ, pulse/ripple animation 2 ชั้นตอนฟัง (สี maroon), focus-visible ทั่วแอปผ่าน global `:focus-visible`
+- [x] ปรับปุ่มค้นหา + text input ([page.module.css](../src/app/page.module.css)) ให้ใช้ token เดียวกัน — hover/active/focus-ring สีส้ม
+- [x] ปรับการ์ดผลลัพธ์ ([ResultCard.module.css](../src/components/ResultCard.module.css)) — hover lift + เงา, accent bar ซ้ายสีส้ม→มะรูนตอน hover, confidence bar สีเขียว, % confidence สีมะรูน
+- [x] เพิ่ม `viewport.themeColor` ใน [layout.tsx](../src/app/layout.tsx) (คนละสีตาม light/dark)
+- [x] Contrast: ใช้ตัวอักษรน้ำตาลเข้ม (`#2c1810`) บนพื้นครีมอ่อน (`#fdf8ec`, อ่อนกว่า cream token `#f1e5a1` ที่ให้มา เพื่อไม่ให้ตัวอักษรอ่านยาก) — แยก `--surface` เป็นสีขาวอมครีมสำหรับการ์ดให้ตัดกับพื้นหลังชัดขึ้น
+- [x] ตรวจด้วย browser automation — screenshot + inject token-driven preview card เพื่อยืนยันครบ 4 สี, **ไม่มี console error ใหม่**
+
+**Deliverable:** หน้าเว็บใช้ palette ที่กำหนดครบ ปุ่ม/การ์ดมี interaction feedback ชัดเจน ไม่มี console error ใหม่ — ✅
+
+**Acceptance criteria:** ✅ ตรวจด้วยสายตา (screenshot) ยืนยันครบ 4 สีใช้เป็นระบบผ่าน CSS custom properties (ไม่ hardcode กระจาย), contrast อ่านง่าย, ปุ่ม/การ์ดมี hover/active/focus state ชัดเจนทั้งหมด
+
+> **สถานะ: ✅ เสร็จสมบูรณ์** (2026-08-17) — ยืนยันด้วย screenshot จริงผ่าน headless browser, ไม่มี console error/hydration issue เพิ่มจากการเปลี่ยน CSS
+>
+> **เพิ่มเติม (2026-08-17):** ใส่ [public/img/songlens.png](../public/img/songlens.png) (โปสเตอร์แบรนด์ — ไมค์วินเทจ + "MUSIC" + แผ่นเสียง "SONGLENS") เป็นพื้นหลังหน้าเว็บ:
+> - บีบอัดเป็น `songlens-bg.webp` ก่อนใช้จริง (3.3MB → 235KB, ลด 93%) เก็บไฟล์ต้นฉบับ `.png` ไว้เผื่อใช้งานอื่น
+> - ใช้ CSS overlay สีครีม/เข้มโปร่งแสง (theme-aware, คนละสีระหว่าง light/dark) ทับภาพ ให้ภาพจางลงเป็นพื้นผิว ไม่แข่งกับตัวอักษร/ปุ่มด้านบน
+> - เจอ hydration warning เรื่อง `caret-color:transparent` บน input ระหว่างตรวจสอบ — สืบแล้วไม่ใช่จากโค้ดเรา (ไม่มี `caret-color` ในซอร์สเลย) เป็น artifact จาก extension ของ browser ที่ใช้ทดสอบ ไม่กระทบผู้ใช้จริง
+>
+> **เปลี่ยนภาพพื้นหลังอีกครั้ง (2026-08-17):** สลับเป็น [public/img/songlens-(1).png](<../public/img/songlens-(1).png>) (โทนขาว-ดำฮาล์ฟโทน — "MUSIC / THE RHYTHM OF LIFE" + มือถือแผ่นเสียง คนละอารมณ์กับภาพครีมเดิม) บีบอัดทับ `songlens-bg.webp` เดิม (519KB → 199KB, ไม่ต้องแก้ CSS เพราะชื่อไฟล์อ้างอิงเดิม) ตรวจด้วย screenshot แล้ว overlay ครีมที่มีอยู่ทำให้ภาพเข้มนี้กลายเป็นโทนเทาอุ่นอ่อนๆ แทนครีม ยังกลมกลืนกับปุ่ม/หัวข้อดี อ่านง่าย ไม่ต้องปรับ overlay เพิ่ม
+>
+> **เปลี่ยนวิธีอีกครั้งตามคำขอผู้ใช้ — เลิกทำภาพจางเป็นพื้นผิว (2026-08-17):** เอา overlay ที่ทับภาพออกทั้งหมด ให้ `body` background แสดงภาพเต็มความคมชัด 100% ทุกจุด แล้วเปลี่ยนมาให้ `.main` (เนื้อหาทั้งหมด: หัวข้อ/ปุ่ม/ฟอร์ม/ผลลัพธ์) เป็นแผงกระจกลอยกลางจอแทน (`--panel-bg` โปร่งแสง + `backdrop-filter: blur(14px)` + เงา) วิธีนี้ทำให้ภาพพื้นหลังคมชัดเต็มที่รอบๆ ขณะที่ตัวอักษร/ปุ่มยังอ่านง่ายเพราะอยู่บนแผงกระจกที่ contrast เพียงพอเสมอ ไม่ขึ้นกับว่าใต้แผงจะเป็นส่วนมืดหรือสว่างของภาพ — ตรวจด้วย screenshot แล้วผลดีมาก
+>
+> **ปรับเป็น split layout ซ้าย/ขวาตามคำขอ (2026-08-17):** เปลี่ยนจากแผงกระจกลอยกลางจอ เป็น 2 คอลัมน์เต็มความสูงหน้าจอ — ฝั่งซ้าย (`.main`) เนื้อหาทั้งหมดบนพื้นหลังทึบสีครีม/เข้มปกติ (ไม่ต้อง glass/blur แล้วเพราะไม่ได้ทับภาพโดยตรง), ฝั่งขวา (`.imagePanel`) โชว์ภาพ hero เต็มความคมชัด 100% เป็นพื้นหลังของคอลัมน์นั้นเอง — ย้าย background-image ออกจาก `body` ไปไว้ที่ `.imagePanel` แทน, มือถือ (`max-width: 860px`) ซ่อน `.imagePanel` ให้เนื้อหาเต็มจอ ไม่บีบอัด
+>
+> **รวมสองแนวทางตามคำขอล่าสุด (2026-08-17):** (1) ภาพพื้นหลังกลับมาเป็นเต็มจอ (`body`) ไม่แบ่งครึ่งซ้าย/ขวาอีกต่อไป เอา `.imagePanel` div ออก (2) เนื้อหาฝั่งซ้ายกลับไปเป็นกล่องกระจกเบลอ (`--panel-bg` + `backdrop-filter`) แต่ปรับให้ **sized to content** (`max-width: 460px`, ไม่ stretch เต็มความสูง/ความกว้างครึ่งจอเหมือนตอนเป็น split layout) แล้วจัดตำแหน่งชิดซ้ายด้วย `.page { justify-content: flex-start }` — ผลคือภาพคมชัด 100% ทุกที่ยกเว้นเบลอเฉพาะพื้นที่ที่กล่อง UI ครอบอยู่จริงๆ เท่านั้น ตามที่ขอ
 
 ---
 

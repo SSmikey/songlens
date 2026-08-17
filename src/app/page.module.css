@@ -1,17 +1,40 @@
+/* Hero image covers the full viewport (see body in globals.css, full
+   strength, never dimmed). Content sits on the left in a glass panel
+   sized to fit itself — the blur/tint only ever covers the UI's own
+   footprint, never a full half of the screen. */
 .page {
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  padding: 3rem 1.25rem 4rem;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2rem clamp(1.25rem, 6vw, 5rem);
 }
 
 .main {
   width: 100%;
-  max-width: 640px;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  padding: 2.5rem 2rem;
+  border-radius: 24px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+@media (max-width: 640px) {
+  .page {
+    justify-content: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .main {
+    padding: 2rem 1.5rem;
+  }
 }
 
 .header {
@@ -22,8 +45,10 @@
 }
 
 .appTitle {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   margin: 0;
+  color: var(--accent-active);
+  letter-spacing: -0.01em;
 }
 
 .tagline {
@@ -36,6 +61,27 @@
 .divider {
   font-size: 0.8rem;
   opacity: 0.5;
+  position: relative;
+  width: 100%;
+  text-align: center;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--surface-border);
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
 }
 
 .textForm {
@@ -46,28 +92,56 @@
 
 .textInput {
   flex: 1;
-  padding: 0.65rem 0.9rem;
-  border-radius: 8px;
-  border: 1px solid rgba(128, 128, 128, 0.35);
-  background: transparent;
+  padding: 0.7rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
   color: var(--foreground);
   font-size: 0.95rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.textInput:focus {
-  outline: 2px solid #d4380d;
-  outline-offset: 1px;
+.textInput::placeholder {
+  color: var(--foreground);
+  opacity: 0.45;
+}
+
+.textInput:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.textInput:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(239, 105, 5, 0.18);
+}
+
+.textInput:disabled {
+  opacity: 0.6;
 }
 
 .searchButton {
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
   border: none;
-  background: #d4380d;
-  color: white;
+  background: var(--accent);
+  color: var(--accent-contrast);
   font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.searchButton:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.searchButton:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .searchButton:disabled {
@@ -97,7 +171,7 @@
 .errorText {
   text-align: center;
   font-size: 0.9rem;
-  color: #cf1322;
+  color: var(--error);
 }
 
 .resultList {

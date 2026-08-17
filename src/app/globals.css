@@ -1,12 +1,60 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand palette — warm, earthy, Isaan-textile-inspired (matches the
+     ลูกทุ่ง theme). Keep the raw hexes as tokens too so components can
+     reference a specific brand color directly when a semantic token
+     doesn't fit (e.g. a green confidence bar that should stay green in
+     both themes). */
+  --color-maroon: #8b2626;
+  --color-orange: #ef6905;
+  --color-cream: #f1e5a1;
+  --color-green: #486c2f;
+
+  --background: #fdf8ec; /* soft cream, lighter than --color-cream so body text stays easy on the eyes */
+  --foreground: #2c1810; /* warm near-black, high contrast on cream */
+  --surface: #ffffff;
+  --surface-border: rgba(139, 38, 38, 0.16); /* maroon-tinted border */
+
+  --accent: var(--color-orange);
+  --accent-hover: #d65c00;
+  --accent-active: var(--color-maroon);
+  --accent-contrast: #fffaf0; /* text/icon color on top of --accent */
+
+  --accent-secondary: var(--color-green);
+  --accent-secondary-contrast: #fffaf0;
+
+  --focus-ring: var(--color-orange);
+  --error: #b3261e;
+
+  /* Glass panel that holds the UI (.main in page.module.css) — sized to
+     its own content, not the whole viewport half, so the hero image
+     behind it (full strength, see body below) stays uncovered everywhere
+     else. */
+  --panel-bg: rgba(255, 250, 240, 0.88);
+  --panel-border: rgba(255, 255, 255, 0.5);
+  --panel-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1c1410;
+    --foreground: var(--color-cream);
+    --surface: #2a1e16;
+    --surface-border: rgba(241, 229, 161, 0.14);
+
+    --accent: var(--color-orange);
+    --accent-hover: #ff8a3d;
+    --accent-active: #c94f4f;
+    --accent-contrast: #1c1410;
+
+    --accent-secondary: #7fae5c;
+    --accent-secondary-contrast: #12200a;
+
+    --focus-ring: #ff8a3d;
+    --error: #ff6b60;
+
+    --panel-bg: rgba(28, 20, 16, 0.8);
+    --panel-border: rgba(255, 255, 255, 0.1);
+    --panel-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -25,10 +73,26 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--foreground);
-  background: var(--background);
+  background-color: var(--background);
+  /* Full-viewport hero image, full strength — no tint/fade. Legibility
+     comes entirely from the glass panel (.main) content sits on. */
+  background-image: url("/img/songlens-bg.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* iOS Safari doesn't support background-attachment: fixed well (it can
+   scroll away or cause jank) — fall back to normal scroll attachment
+   there rather than leave a broken/laggy background. */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-attachment: scroll;
+  }
 }
 
 * {
@@ -40,6 +104,14 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Consistent, visible focus state everywhere — keyboard users get the
+   same brand-colored ring the mouse-driven hover states use. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
