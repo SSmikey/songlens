@@ -1,18 +1,18 @@
 /* Hero image covers the full viewport (see body in globals.css, full
-   strength, never dimmed). Content sits on the left in a glass panel
-   sized to fit itself — the blur/tint only ever covers the UI's own
-   footprint, never a full half of the screen. */
+   strength, never dimmed). A 16-column grid spans the full row; the
+   content panel occupies columns 2–8, everything else lets the image
+   show through untouched. */
 .page {
   min-height: 100vh;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  column-gap: 1rem;
   align-items: center;
-  justify-content: flex-start;
-  padding: 2rem clamp(1.25rem, 6vw, 5rem);
+  padding: 2rem clamp(1rem, 4vw, 3rem);
 }
 
 .main {
-  width: 100%;
-  max-width: 460px;
+  grid-column: 2 / 9;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -28,11 +28,11 @@
 
 @media (max-width: 640px) {
   .page {
-    justify-content: center;
     padding: 1.5rem 1rem;
   }
 
   .main {
+    grid-column: 1 / -1;
     padding: 2rem 1.5rem;
   }
 }
