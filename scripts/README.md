@@ -11,5 +11,7 @@ One-off / operational scripts (ไม่ใช่ส่วนหนึ่งข�
 - `eval-matcher.ts` — Phase 2: จำลอง query แบบ STT เพี้ยน (ตัดวรรณยุกต์ / สลับพยัญชนะเสียงใกล้กัน / ลบตัวอักษรสุ่ม) แล้ววัด accuracy@1 / accuracy@5 ของ `searchLyrics()` เทียบกับเพลงต้นทางจริง
   - รัน: `npx tsx --env-file=.env.local scripts/eval-matcher.ts`
   - ผลล่าสุด: accuracy@1 ~95-97%, accuracy@5 100% (จาก 60 trials)
+- `test-stt-pipeline.ts` — Phase 3: smoke test TTS→Whisper→searchLyrics แบบ end-to-end — **ต้องมี `OPENAI_API_KEY` ที่ผูก billing แล้ว** (ไม่ใช่ critical path ของระบบตอนนี้ เพราะ STT จริงใช้ Web Speech API ของเบราว์เซอร์แทน ดู `src/lib/stt/README.md`)
+  - รัน: `npx tsx --env-file=.env.local scripts/test-stt-pipeline.ts`
 
 ดู [docs/PLAN.md](../docs/PLAN.md) Phase 1 สำหรับรายละเอียด

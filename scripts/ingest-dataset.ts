@@ -102,7 +102,7 @@ async function main() {
       const batch = records.slice(i, i + BATCH_SIZE);
 
       const values: unknown[] = [];
-      const rowPlaceholders = batch.map((rec, rowIdx) => {
+      const rowPlaceholders = batch.map((rec) => {
         const placeholders = columns.map((col) => {
           values.push(rec[col]);
           return `$${values.length}`;

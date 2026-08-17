@@ -22,10 +22,13 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 เปิดไฟล์ `.env.local` (มีอยู่แล้วในโปรเจกต์ สร้างจาก `.env.example`) แล้วแทนที่ค่า `DATABASE_URL` ด้วย connection string จริง
 
-## 4. สร้าง OpenAI API key
+## 4. สร้าง OpenAI API key — ⚠️ ไม่จำเป็นแล้ว (optional)
 
+> **อัปเดต Phase 3:** ระบบเปลี่ยนไปใช้ **Web Speech API ของเบราว์เซอร์** สำหรับ STT (ฟรี ไม่ต้องมี API key) แทน OpenAI Whisper แล้ว เพราะ API key ที่สร้างไว้ตอนแรกไม่มี billing ผูก (`insufficient_quota`) ข้อนี้จึง**ข้ามได้**เว้นแต่อยากเปิดใช้ `src/lib/stt/whisper.ts` เป็นทางเลือกสำรองในอนาคต
+
+ถ้ายังอยากทำ (ไม่บังคับ):
 1. ไปที่ [platform.openai.com/api-keys](https://platform.openai.com/api-keys) → Create new secret key
-2. เติมเครดิต/ตั้ง billing ไว้เล็กน้อยสำหรับทดสอบ Whisper API (Phase 3)
+2. เติมเครดิต/ตั้ง billing ที่ [platform.openai.com/settings/organization/billing](https://platform.openai.com/settings/organization/billing)
 3. ใส่ค่าใน `.env.local` ที่ `OPENAI_API_KEY`
 
 ## 5. ยืนยันว่าเชื่อมต่อได้

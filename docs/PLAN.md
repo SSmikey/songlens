@@ -93,36 +93,42 @@
 
 ## Phase 3 — STT Integration
 
-**เป้าหมาย:** แปลงไฟล์เสียงเป็นข้อความไทยได้ ผ่าน interface ที่สลับ provider ได้
+> ⚠️ **Pivot (2026-08-17):** เดิมวางแผนใช้ OpenAI Whisper API (server-side) แต่ API key ที่สร้างไว้ยังไม่มี billing/quota (`insufficient_quota` ตอนทดสอบจริง) ผู้ใช้เลือกเปลี่ยนไปใช้ **Web Speech API ของเบราว์เซอร์แทน — ฟรี 100% ไม่ต้องมี API key** งานและ acceptance criteria ด้านล่างปรับตามการตัดสินใจนี้ ของเดิม (OpenAI) เก็บไว้ใน `src/lib/stt/whisper.ts` เป็นทางเลือกสำรอง ไม่ได้อยู่ใน critical path
+
+**เป้าหมาย:** แปลงเสียงพูดเป็นข้อความไทยได้ โดยไม่มีค่าใช้จ่าย
 
 **งาน:**
-- [ ] เขียน `lib/stt/types.ts` — interface `SttProvider { transcribe(audio: Blob | Buffer): Promise<string> }`
-- [ ] เขียน `lib/stt/whisper.ts` — implement ด้วย OpenAI Whisper API (`gpt-4o-transcribe` หรือรุ่นที่เหมาะสม ณ ตอนพัฒนา — เช็ค API ปัจจุบันก่อนเขียนจริง)
-- [ ] ทดสอบแยกด้วยไฟล์เสียงตัวอย่าง (อัดเอง 5-10 ไฟล์ พูดเนื้อเพลงจากท่อนต่างๆ ใน dataset) ยืนยันว่าได้ข้อความไทยกลับมาสมเหตุสมผล
-- [ ] บันทึกผล transcript เทียบกับสิ่งที่พูดจริง ไว้เป็น baseline สำหรับ Phase 6
+- [x] เขียน `src/lib/stt/types.ts` — interface `SttProvider { transcribe(input): Promise<string> }` (ยังเก็บไว้สำหรับ provider ฝั่ง server ในอนาคต)
+- [x] เขียน `src/lib/stt/whisper.ts` — implement ด้วย OpenAI Whisper API (`gpt-4o-transcribe`) — **ใช้งานได้จริงเมื่อ API key มี billing แล้วเท่านั้น ไม่ใช่ default ของระบบ**
+- [x] เขียน [scripts/test-stt-pipeline.ts](../scripts/test-stt-pipeline.ts) — smoke test TTS→Whisper→searchLyrics (ติด quota เลยยังไม่ได้รันจบ, เก็บไว้เผื่อใช้ทีหลัง)
+- [x] **ทางเลือกใหม่ (ใช้จริง):** เขียน [src/lib/stt/browserSpeechRecognition.ts](../src/lib/stt/browserSpeechRecognition.ts) — wrapper รอบ `SpeechRecognition`/`webkitSpeechRecognition` ของเบราว์เซอร์ (`lang: "th-TH"`), มี `isSpeechRecognitionSupported()` + `listenOnce()` คืน Promise<string>, จัดการ error (`not-allowed`, `no-speech`, `network`, `unsupported` ฯลฯ) เป็น `ListenError` ที่แยกประเภทได้
+- [ ] ทดสอบด้วยการพูดจริงผ่าน browser จริง (Chrome/Edge) — **ทำไม่ได้ในสภาพแวดล้อมนี้** (ไม่มี mic/browser ให้เครื่องมือเข้าถึง) ต้องรอ Phase 5 มี UI จริงแล้วผู้ใช้ทดสอบเอง
 
-**Deliverable:** ฟังก์ชัน `transcribe(audioBuffer)` เรียกได้จาก script ทดสอบ คืนข้อความไทย
+**Deliverable:** `listenOnce(): Promise<string>` เรียกจาก Client Component ได้ (จะต่อกับปุ่มอัดเสียงจริงใน Phase 5)
 
-**Acceptance criteria:** transcript ที่ได้จากเสียงพูดชัดเจน ต้องมีคำสำคัญของท่อนเพลงนั้นปรากฏอยู่ (ไม่ต้องตรง 100% แต่ semantic ต้องใกล้เคียง)
+**Acceptance criteria:** ✅ โค้ด type-check ผ่าน (`npx tsc --noEmit`), ออกแบบ error handling ครบตามเคสที่ Web Speech API คืนได้จริง — ⏳ การยืนยันว่า "ได้ข้อความไทยสมเหตุสมผลจากเสียงพูดชัดเจน" ต้องทดสอบกับ browser จริงใน Phase 5/6
+
+> **สถานะ: 🟡 เสร็จเท่าที่ทำได้ในสภาพแวดล้อมนี้** — โค้ดพร้อมใช้ รอทดสอบกับเสียงจริงตอน Phase 5
 
 ---
 
 ## Phase 4 — API Layer
 
-**เป้าหมาย:** ต่อ Phase 2 + 3 เข้าด้วยกันเป็น API เดียวที่ frontend เรียกใช้ได้
+> ⚠️ **ปรับตาม Phase 3 pivot:** STT ทำที่ browser แล้ว (`browserSpeechRecognition.ts`) ดังนั้น backend ไม่ต้องรับไฟล์เสียงอีกต่อไป — รับแค่ "ข้อความที่ถอดมาแล้ว" พอ เหลือ endpoint เดียว ไม่ใช่สอง
+
+**เป้าหมาย:** เปิด endpoint ให้ frontend ส่งข้อความ (จาก Web Speech API หรือพิมพ์เอง) เข้ามาค้นหาเพลง
 
 **งาน:**
-- [ ] `app/api/voice-search/route.ts`:
-  - รับ `multipart/form-data` (ไฟล์เสียง) → เรียก `transcribe()` → เรียก `searchLyrics()` → คืน JSON `{ transcript, results: [...] }`
-  - จำกัดขนาด/ความยาวไฟล์เสียง (เช่น ≤10 วิ, ≤2MB) ปฏิเสธถ้าเกิน
-  - Validate input ด้วย `zod`
-- [ ] `app/api/text-search/route.ts` — รับข้อความตรงๆ เรียก `searchLyrics()` อย่างเดียว (ไว้ debug และเป็น fallback ให้ผู้ใช้พิมพ์เองได้)
-- [ ] Error handling: STT ล้มเหลว, ไม่มีผลลัพธ์ที่คะแนนพอ (คืน "ไม่พบเพลงที่ตรงกัน" แทนการโชว์ผลมั่วๆ)
-- [ ] Basic rate limiting ต่อ IP (กัน abuse ค่าใช้จ่าย STT)
+- [ ] `app/api/search/route.ts`:
+  - รับ JSON `{ query: string }` (มาจาก `listenOnce()` หรือช่องพิมพ์เอง — ฝั่ง backend ไม่สนว่าที่มาคือเสียงหรือพิมพ์) → เรียก `searchLyrics()` → คืน JSON `{ results: [...] }`
+  - ใช้ `MIN_SCORE_THRESHOLD` จาก `matcher.ts` (Phase 2) ตัดสิน "ไม่พบเพลงที่ตรงกัน" แทนการโชว์ผลคะแนนต่ำแบบมั่วๆ
+  - Validate input ด้วย `zod` (จำกัดความยาว query กันส่ง payload ใหญ่ผิดปกติ)
+- [ ] Error handling: query ว่าง, DB error, ไม่มีผลลัพธ์ที่คะแนนพอ
+- [ ] Basic rate limiting ต่อ IP (กัน abuse แม้ query ฟรีแล้ว ก็ยังกิน DB query โหลดได้)
 
-**Deliverable:** ยิง `curl`/Postman ไปที่ `/api/voice-search` พร้อมไฟล์เสียงตัวอย่าง ได้ผลลัพธ์ JSON ที่ถูกต้อง
+**Deliverable:** ยิง `curl`/Postman ไปที่ `/api/search` พร้อม `{ "query": "..." }` ได้ผลลัพธ์ JSON ที่ถูกต้อง
 
-**Acceptance criteria:** ครบ happy path + error path (ไฟล์ใหญ่เกิน, ไม่มีเสียงพูด, STT error) มีการจัดการทั้งหมดโดยไม่ 500 crash
+**Acceptance criteria:** ครบ happy path + error path (query ว่าง, ไม่พบผลลัพธ์, DB error) มีการจัดการทั้งหมดโดยไม่ 500 crash
 
 ---
 
@@ -131,11 +137,11 @@
 **เป้าหมาย:** หน้าเว็บที่ผู้ใช้จริงกดอัดเสียงและเห็นผลลัพธ์ได้ (ทำขนานกับ Phase 3-4 โดย mock response ไปก่อนได้)
 
 **งาน:**
-- [ ] `components/RecordButton.tsx` — ใช้ `MediaRecorder` ขออนุญาต mic, อัด, จำกัดเวลาอัตโนมัติ (เช่น auto-stop ที่ 10 วิ), แสดงสถานะ (idle/recording/processing)
+- [ ] `components/RecordButton.tsx` — Client Component เรียก `listenOnce()` จาก `browserSpeechRecognition.ts`, เช็ค `isSpeechRecognitionSupported()` ก่อน (ซ่อนปุ่ม/แจ้งเตือนถ้าเบราว์เซอร์ไม่รองรับ), แสดงสถานะ (idle/listening/processing), จัดการ `ListenError` แต่ละแบบ (`not-allowed` → บอกให้อนุญาต mic, `no-speech` → ลองใหม่, `unsupported` → เสนอช่องพิมพ์แทน)
 - [ ] `components/ResultCard.tsx` — โชว์ชื่อเพลง/ศิลปิน/ปี + snippet เนื้อเพลงที่ match (highlight ส่วนที่ตรง) + คะแนนความมั่นใจ
-- [ ] `app/page.tsx` — ประกอบ UI หลัก: ปุ่มอัด → เรียก `/api/voice-search` → loading state → แสดงลิสต์ผลลัพธ์ (หรือ empty state ถ้าไม่พบ)
-- [ ] ช่องพิมพ์ข้อความ fallback (เผื่อ mic ใช้ไม่ได้ หรือผู้ใช้อยากพิมพ์เอง) ต่อกับ `/api/text-search`
-- [ ] Responsive/มือถือ (เคสใช้งานจริงส่วนใหญ่คือมือถือ) + จัดการ permission denied ของ mic อย่างสุภาพ
+- [ ] `app/page.tsx` — ประกอบ UI หลัก: ปุ่มอัด → `listenOnce()` ได้ข้อความ → ส่งเข้า `/api/search` → loading state → แสดงลิสต์ผลลัพธ์ (หรือ empty state ถ้าไม่พบ)
+- [ ] ช่องพิมพ์ข้อความ fallback (เบราว์เซอร์ไม่รองรับ Web Speech API เช่น Firefox/Safari, หรือผู้ใช้อยากพิมพ์เอง) ยิงตรงไปที่ `/api/search` เดียวกัน
+- [ ] Responsive/มือถือ (เคสใช้งานจริงส่วนใหญ่คือมือถือ) + จัดการ permission denied ของ mic อย่างสุภาพ + แจ้งเตือนชัดเจนถ้าเปิดด้วย Firefox/Safari ว่าฟีเจอร์เสียงอาจใช้ไม่ได้
 
 **Deliverable:** หน้าเว็บใช้งานได้ end-to-end บน `localhost`
 
