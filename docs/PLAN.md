@@ -231,6 +231,12 @@
 > **รวมสองแนวทางตามคำขอล่าสุด (2026-08-17):** (1) ภาพพื้นหลังกลับมาเป็นเต็มจอ (`body`) ไม่แบ่งครึ่งซ้าย/ขวาอีกต่อไป เอา `.imagePanel` div ออก (2) เนื้อหาฝั่งซ้ายกลับไปเป็นกล่องกระจกเบลอ (`--panel-bg` + `backdrop-filter`) แต่ปรับให้ **sized to content** (`max-width: 460px`, ไม่ stretch เต็มความสูง/ความกว้างครึ่งจอเหมือนตอนเป็น split layout) แล้วจัดตำแหน่งชิดซ้ายด้วย `.page { justify-content: flex-start }` — ผลคือภาพคมชัด 100% ทุกที่ยกเว้นเบลอเฉพาะพื้นที่ที่กล่อง UI ครอบอยู่จริงๆ เท่านั้น ตามที่ขอ
 >
 > **ปรับเป็น 16-column grid ตามคำขอ (2026-08-17):** `.page` เปลี่ยนจาก flex เป็น `display: grid; grid-template-columns: repeat(16, 1fr)` เต็ม row, `.main` วางที่ `grid-column: 2 / 9` (คอลัมน์ 2-8 จาก 16 คอลัมน์) แทนการใช้ `max-width` คงที่ — มือถือ (`max-width: 640px`) เปลี่ยนเป็น `grid-column: 1 / -1` (เต็มความกว้าง) กันบีบแคบเกินไป
+>
+> **เปลี่ยนจากกระจก tint เป็นเบลอล้วน + ขอบจางกระจาย (2026-08-17):** ย้ายจาก background สีทึบบน `.main` ไปเป็น `.main::before` (pseudo-element แยกชั้น, ไม่กระทบตัวอักษร/ปุ่มที่เป็นลูกจริงของ `.main`) ใช้ `backdrop-filter: blur()` + `mask-image: radial-gradient(...)` ให้ขอบเบลอจางออกแทนขอบกล่องชัดๆ
+>
+> 🐛 **บั๊กที่เจอ (สำคัญ จำไว้ใช้ครั้งหน้า):** Next.js 16 + Turbopack's CSS compiler (LightningCSS) **ตัด `backdrop-filter` ทิ้งทั้งหมด** ถ้ากฎ CSS เดียวกันมีทั้ง `-webkit-backdrop-filter` และ `-webkit-mask-image` (prefixed) คู่กับตัว unprefixed พร้อมกัน (4 filter-related declarations ในกฎเดียว) — ตรวจพบด้วยการเทียบ `getComputedStyle` จริงในเบราว์เซอร์กับ CSS source, เจอว่า compiled output ขาด `backdrop-filter` ไปเฉยๆ ทั้งที่เขียนถูก แก้โดยตัด `-webkit-` prefix ที่ซ้ำออก เหลือแค่ unprefixed (`backdrop-filter`, `mask-image`) ก็พอสำหรับ Chrome/Edge ที่เป็น target หลักของโปรเจกต์นี้อยู่แล้ว
+>
+> ปัจจุบัน (2026-08-17): `background: transparent`, `backdrop-filter: blur(20px)` — ค่าเริ่มต้นธรรมดา ผู้ใช้จะปรับความเบลอเองต่อ
 
 ---
 

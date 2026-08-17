@@ -1,14 +1,14 @@
 .card {
   list-style: none;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-left: 4px solid var(--accent);
+  background: var(--content-bg);
+  border: 1px solid var(--content-border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   text-align: left;
+  color: var(--content-foreground);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -17,8 +17,8 @@
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(139, 38, 26, 0.14);
-  border-left-color: var(--accent-active);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+  border-color: var(--accent);
 }
 
 .header {
@@ -32,13 +32,13 @@
   font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
-  color: var(--foreground);
+  color: var(--content-foreground);
 }
 
 .confidence {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--accent-active);
+  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -58,7 +58,7 @@
 .confidenceBar {
   height: 5px;
   border-radius: 3px;
-  background: var(--surface-border);
+  background: rgba(235, 235, 235, 0.25);
   overflow: hidden;
 }
 

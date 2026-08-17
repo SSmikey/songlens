@@ -56,7 +56,7 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <header className={styles.header}>
-          <h1 className={styles.appTitle}>🎵 SongLens</h1>
+          <h1 className={styles.appTitle}>SongLens</h1>
           <p className={styles.tagline}>จำเนื้อเพลงได้บางท่อน? พูดหรือพิมพ์ แล้วให้เราช่วยหาเพลงลูกทุ่งที่ใช่</p>
         </header>
 

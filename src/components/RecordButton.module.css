@@ -10,30 +10,26 @@
   width: 92px;
   height: 92px;
   border-radius: 50%;
-  border: none;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 2.1rem;
+  border: 2px solid var(--content-border);
+  background: var(--content-bg);
+  color: var(--content-foreground);
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 6px 16px rgba(139, 38, 26, 0.28),
-    0 0 0 4px var(--background);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
   transition:
     transform 0.15s ease,
     background-color 0.2s ease,
+    border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .button:hover:not(:disabled) {
-  background: var(--accent-hover);
+  border-color: var(--accent);
   transform: translateY(-2px) scale(1.04);
-  box-shadow:
-    0 10px 22px rgba(139, 38, 26, 0.32),
-    0 0 0 4px var(--background);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
 }
 
 .button:active:not(:disabled) {
@@ -47,6 +43,8 @@
 
 .button.listening {
   background: var(--accent-active);
+  border-color: var(--accent-active);
+  color: var(--accent-contrast);
   animation: breathe 1.4s ease-in-out infinite;
 }
 
@@ -80,20 +78,16 @@
 @keyframes breathe {
   0%,
   100% {
-    box-shadow:
-      0 6px 16px rgba(139, 38, 26, 0.35),
-      0 0 0 4px var(--background);
+    box-shadow: 0 6px 16px rgba(139, 38, 26, 0.35);
   }
   50% {
-    box-shadow:
-      0 6px 22px rgba(139, 38, 26, 0.5),
-      0 0 0 4px var(--background);
+    box-shadow: 0 6px 22px rgba(139, 38, 26, 0.5);
   }
 }
 
 .label {
   font-size: 0.9rem;
-  color: var(--foreground);
+  color: var(--content-foreground);
   opacity: 0.75;
   text-align: center;
   min-height: 1.2em;
@@ -103,7 +97,7 @@
   max-width: 320px;
   text-align: center;
   font-size: 0.85rem;
-  color: var(--foreground);
+  color: var(--content-foreground);
   opacity: 0.7;
   line-height: 1.5;
 }

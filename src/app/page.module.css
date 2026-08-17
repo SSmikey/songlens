@@ -11,19 +11,22 @@
   padding: 2rem clamp(1rem, 4vw, 3rem);
 }
 
+/* Solid content card — sized to its own content, not stretched to fill
+   the whole column. */
 .main {
   grid-column: 2 / 9;
+  width: 100%;
+  max-width: 600px;
+  justify-self: start;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  padding: 2.5rem 2rem;
-  border-radius: 24px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: 3rem 2.5rem;
+  background: var(--content-bg);
+  border: 1px solid var(--content-border);
+  border-radius: 20px;
+  color: var(--content-foreground);
 }
 
 @media (max-width: 640px) {
@@ -33,7 +36,8 @@
 
   .main {
     grid-column: 1 / -1;
-    padding: 2rem 1.5rem;
+    justify-self: stretch;
+    padding: 2.5rem 1.5rem;
   }
 }
 
@@ -46,8 +50,9 @@
 
 .appTitle {
   font-size: 1.85rem;
+  font-weight: 600;
   margin: 0;
-  color: var(--accent-active);
+  color: var(--accent);
   letter-spacing: -0.01em;
 }
 
@@ -73,7 +78,8 @@
   top: 50%;
   width: 40%;
   height: 1px;
-  background: var(--surface-border);
+  background: var(--content-border);
+  opacity: 0.3;
 }
 
 .divider::before {
@@ -94,9 +100,9 @@
   flex: 1;
   padding: 0.7rem 0.95rem;
   border-radius: 10px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface);
-  color: var(--foreground);
+  border: 1px solid var(--content-border);
+  background: var(--content-bg);
+  color: var(--content-foreground);
   font-size: 0.95rem;
   transition:
     border-color 0.15s ease,
@@ -104,7 +110,7 @@
 }
 
 .textInput::placeholder {
-  color: var(--foreground);
+  color: var(--content-foreground);
   opacity: 0.45;
 }
 
@@ -124,20 +130,22 @@
 .searchButton {
   padding: 0.7rem 1.4rem;
   border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: var(--accent-contrast);
+  border: 1px solid var(--content-border);
+  background: var(--content-bg);
+  color: var(--content-foreground);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition:
     background-color 0.15s ease,
+    color 0.15s ease,
     transform 0.1s ease;
 }
 
 .searchButton:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--content-border);
+  color: var(--content-bg);
 }
 
 .searchButton:active:not(:disabled) {
